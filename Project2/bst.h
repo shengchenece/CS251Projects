@@ -15,18 +15,6 @@ template<typename TKey, typename TValue>
 class binarysearchtree
 {
 
-// BSTs now declared as:
-// binarysearchtree<int,MovieData> bstMoviesByID;
-struct MovieData
-{
-int PubYear;
-int Num5Stars;
-int Num4Stars;
-int Num3Stars;
-int Num2Stars;
-int Num1Stars;
-};
-
 private:
   struct NODE
   {
@@ -70,6 +58,7 @@ private:
    }
 
 public:
+
   //
   // default constructor:
   //
@@ -79,6 +68,16 @@ public:
   {
     Root = nullptr;
     Size = 0;
+  }
+
+  //
+  // copy constructor:
+  //
+  binarysearchtree(binarysearchtree& other)
+  {
+  //
+  // TODO
+  //
   }
 
   // 

@@ -11,9 +11,21 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "bst.h"
 
 using namespace std;
 
+// BSTs now declared in main() as:
+// binarysearchtree<int,MovieData> bstMoviesByID;
+struct MovieData
+{
+int PubYear;
+int Num5Stars;
+int Num4Stars;
+int Num3Stars;
+int Num2Stars;
+int Num1Stars;
+};
 
 //
 // trim
@@ -82,6 +94,17 @@ void InputMovies(string moviesFilename)
 //
 int main()
 {
+  // binarysearchtree<int,MovieData> bstMoviesByID;
+  // test code for individual header parts
+  binarysearchtree<int,int> bst1;
+  bst1.insert(123, 456);
+  int* value = bst1.search(123);
+  cout << *value << endl; // should output 456
+  *value = 789; // change value to 789
+  cout << *value << endl;
+  bst1.inorder();
+
+/*
   string moviesFilename; // = "movies1.txt";
   string reviewsFilename; // = "reviews1.txt";
 
@@ -95,6 +118,7 @@ int main()
   getline(cin, junk);  // discard EOL following last input:
 
   InputMovies(moviesFilename);
+*/
 
   // done:
   return 0;
