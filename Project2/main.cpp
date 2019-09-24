@@ -95,14 +95,25 @@ void InputMovies(string moviesFilename)
 int main()
 {
   // binarysearchtree<int,MovieData> bstMoviesByID;
-  // test code for individual header parts
+  // test code for individual project parts
   binarysearchtree<int,int> bst1;
   bst1.insert(123, 456);
-  int* value = bst1.search(123);
-  cout << *value << endl; // should output 456
-  *value = 789; // change value to 789
-  cout << *value << endl;
-  bst1.inorder();
+  bst1.insert(789, 223);
+  bst1.insert(264, 308);
+  bst1.insert(450, 458);
+  bst1.insert(500, 950);
+
+  binarysearchtree<int, int> bst2 = bst1; // copy construct:
+  
+  cout << bst1.size() << " vs. " << bst2.size() << endl;
+  cout << bst1.height() << " vs. " << bst2.height() << endl;
+
+  int* value1 = bst1.search(123);
+  int* value2 = bst2.search(123);
+
+  cout << *value1 << " vs. " << *value2 << endl; // both 456
+  *value2 = 789; // this should only change bst2:
+  cout << *value1 << " vs. " << *value2 << endl; // 456 vs. 789
 
 /*
   string moviesFilename; // = "movies1.txt";
