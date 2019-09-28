@@ -57,23 +57,24 @@ private:
       return 1 + max(leftHeight, rightHeight);
    }
 
-   void _copystructor(NODE* root)
+   void _copystructor(NODE* copyNode)
    {
-    NODE* copyNode = root;
-    // check to see if copy tree is empty
+    // 1st iteration: we passed in the pointer to the old BST's root
+    // This will be the root of a new BST that will have nodes inserted into it
+    
+    // check to see if we're at the bottom of the tree
+    // (or if the old BST was empty)
     if (copyNode == nullptr)
     {
       return;
     }
-    else
     // Make sure this function does its recursive operations by Pre-order
     // Op, Left, Right
+    else
     {
-      insert(copyNode->Key, copyNode->Value);
+      insert(copyNode->Key, copyNode->Value); // Note: insert() should also update new tree's Size
       _copystructor(copyNode->Left);
       _copystructor(copyNode->Right);
-      // Careful with this Size update!
-      Size++;
     }
    }
 
@@ -96,14 +97,10 @@ public:
   binarysearchtree(binarysearchtree& other)
   {
     // initialize new BST fields for Root and Size
-    // this->Root is a new node with copied contents of other.Root
-    // to build an independent clone of original BST
-    this->Root = new NODE(*other.Root);
+    this->Root = nullptr;
     this->Size = 0;
-    
-    // fill new clone BST with contents of old BST
-    // go to internal helper function and pass Root of new BST
-    _copystructor(this->Root);
+    // go to internal helper function and pass Root of old BST
+    _copystructor(other.Root);
   }
 
   // 
@@ -164,7 +161,6 @@ public:
   //
   void insert(TKey key, TValue value)
   {
-     
     NODE* prev = nullptr;
     NODE* cur = Root;
 

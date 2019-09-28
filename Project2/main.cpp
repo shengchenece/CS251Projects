@@ -20,11 +20,13 @@ using namespace std;
 struct MovieData
 {
 int PubYear;
-int Num5Stars;
-int Num4Stars;
-int Num3Stars;
-int Num2Stars;
-int Num1Stars;
+int Num5Stars = 0;
+int Num4Stars = 0;
+int Num3Stars = 0;
+int Num2Stars = 0;
+int Num1Stars = 0;
+string NameOfMovie;
+int IDOfMovie;
 };
 
 //
@@ -58,12 +60,13 @@ string trim(const string& str)
 // each line contains:
 //     id pubYear name
 //
-void InputMovies(string moviesFilename)
+void InputMovies(string moviesFilename, binarysearchtree<int,MovieData> byID, binarysearchtree<string,MovieData> byName)
 {
   ifstream moviesFile(moviesFilename);
-  int      id, pubYear;
+  int      id;
   string   name;
-
+  MovieData data;
+  
   if (!moviesFile.good())
   {
     cout << "**Error: unable to open movies file '" << moviesFilename << "', exiting" << endl;
@@ -75,49 +78,88 @@ void InputMovies(string moviesFilename)
   while (!moviesFile.eof())
   {
     // we have more data, so input publication year and movie name:
-    moviesFile >> pubYear;
+    moviesFile >> data.PubYear;
     getline(moviesFile, name);  // movie name fills rest of input line:
 
     // trim potential whitespace from both ends of movie name:
-    name = trim(name);  
+    name = trim(name);
+    // add name and ID of movie to MoviesData struct as well
+    data.NameOfMovie = name;
+    data.IDOfMovie = id;
+
+    byID.insert(id, data);
+    byName.insert(name, data);
 
     // debugging:
-    cout << id << "," << pubYear << "," << name << endl;
+    cout << id << "," << data.PubYear << "," << name << endl;
 
     moviesFile >> id;  // get next ID, or set EOF flag if no more data:
   }
 }
 
+void InputReviews(string reviewsFilename, binarysearchtree<int,MovieData> byID, binarysearchtree<string,MovieData> byName)
+{
+  ifstream    reviewsFile(reviewsFilename);
+  int         reviewNumber;
+  int         movieID;
+  int         reviewStars;
+  MovieData   data;
+  MovieData*  pointer;
+  string      movieName;
+  
+  if (!reviewsFile.good())
+  {
+    cout << "**Error: unable to open reviews file '" << reviewsFilename << "', exiting" << endl;
+    return;
+  }
+
+  reviewsFile >> reviewNumber;  // get first review ID, or set EOF flag if file empty:
+
+  while (!reviewsFile.eof())
+  {
+    // we have more data, so input movie ID and number of stars in review:
+    reviewsFile >> movieID;
+    reviewsFile >> reviewStars;
+
+    // search movies-by-ID BST for inserting review and filling additional data in struct
+    pointer = byID.search(movieID);
+    movieName = pointer->NameOfMovie;
+
+    switch(reviewStars)
+    {
+      case 1: pointer->Num1Stars++;
+      case 2: pointer->Num2Stars++;
+      case 3: pointer->Num3Stars++;
+      case 4: pointer->Num4Stars++;
+      case 5: pointer->Num5Stars++;
+    }
+
+    // search movies-by-Name BST for inserting review
+    pointer = byName.search(movieName);
+
+    switch(reviewStars)
+    {
+      case 1: pointer->Num1Stars++;
+      case 2: pointer->Num2Stars++;
+      case 3: pointer->Num3Stars++;
+      case 4: pointer->Num4Stars++;
+      case 5: pointer->Num5Stars++;
+    }
+
+    reviewsFile >> reviewNumber;  // get next ID, or set EOF flag if no more data:
+  }
+}
 
 //
 // main
 //
 int main()
 {
-  // binarysearchtree<int,MovieData> bstMoviesByID;
-  // test code for individual project parts
-  binarysearchtree<int,int> bst1;
-  bst1.insert(123, 456);
-  bst1.insert(789, 223);
-  bst1.insert(264, 308);
-  bst1.insert(450, 458);
-  bst1.insert(500, 950);
-
-  binarysearchtree<int, int> bst2 = bst1; // copy construct:
-  
-  cout << bst1.size() << " vs. " << bst2.size() << endl;
-  cout << bst1.height() << " vs. " << bst2.height() << endl;
-
-  int* value1 = bst1.search(123);
-  int* value2 = bst2.search(123);
-
-  cout << *value1 << " vs. " << *value2 << endl; // both 456
-  *value2 = 789; // this should only change bst2:
-  cout << *value1 << " vs. " << *value2 << endl; // 456 vs. 789
-
-/*
   string moviesFilename; // = "movies1.txt";
   string reviewsFilename; // = "reviews1.txt";
+
+  binarysearchtree<int,MovieData> bstMoviesByID;
+  binarysearchtree<string,MovieData> bstMoviesByName;
 
   cout << "movies file?> ";
   cin >> moviesFilename;
@@ -128,8 +170,15 @@ int main()
   string junk;
   getline(cin, junk);  // discard EOL following last input:
 
-  InputMovies(moviesFilename);
-*/
+  InputMovies(moviesFilename, bstMoviesByID, bstMoviesByName);
+  InputReviews(reviewsFilename, bstMoviesByID, bstMoviesByName);
+
+  // output number of entries for each file
+  cout << "Num movies: " << bstMoviesByID.size() << endl;
+  cout << "Num reviews: " << bstMoviesByID.size() << endl << endl;
+  
+  cout << "Tree by movie id: size=" << bstMoviesByID.size() << ", height=" << bstMoviesByID.height() << endl;
+  cout << "Tree by movie name: size=" << bstMoviesByName.size() << ", height=" << bstMoviesByName.height() << endl;
 
   // done:
   return 0;
