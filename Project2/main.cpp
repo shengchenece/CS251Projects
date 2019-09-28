@@ -17,6 +17,7 @@ using namespace std;
 
 // BSTs now declared in main() as:
 // binarysearchtree<int,MovieData> bstMoviesByID;
+// or binarysearchtree<string,MovieData> bstMoviesByName;
 struct MovieData
 {
 int PubYear;
@@ -25,6 +26,7 @@ int Num4Stars = 0;
 int Num3Stars = 0;
 int Num2Stars = 0;
 int Num1Stars = 0;
+// additional elements in struct to help with cross-tree lookup
 string NameOfMovie;
 int IDOfMovie;
 };
@@ -60,7 +62,7 @@ string trim(const string& str)
 // each line contains:
 //     id pubYear name
 //
-void InputMovies(string moviesFilename, binarysearchtree<int,MovieData> byID, binarysearchtree<string,MovieData> byName)
+void InputMovies(string moviesFilename, binarysearchtree<int,MovieData>& byID, binarysearchtree<string,MovieData>& byName)
 {
   ifstream moviesFile(moviesFilename);
   int      id;
@@ -91,13 +93,13 @@ void InputMovies(string moviesFilename, binarysearchtree<int,MovieData> byID, bi
     byName.insert(name, data);
 
     // debugging:
-    cout << id << "," << data.PubYear << "," << name << endl;
+    // cout << id << "," << data.PubYear << "," << name << endl;
 
     moviesFile >> id;  // get next ID, or set EOF flag if no more data:
   }
 }
 
-void InputReviews(string reviewsFilename, binarysearchtree<int,MovieData> byID, binarysearchtree<string,MovieData> byName)
+void InputReviews(string reviewsFilename, binarysearchtree<int,MovieData>& byID, binarysearchtree<string,MovieData>& byName, int& reviewCount)
 {
   ifstream    reviewsFile(reviewsFilename);
   int         reviewNumber;
@@ -125,27 +127,34 @@ void InputReviews(string reviewsFilename, binarysearchtree<int,MovieData> byID, 
     pointer = byID.search(movieID);
     movieName = pointer->NameOfMovie;
 
-    switch(reviewStars)
-    {
-      case 1: pointer->Num1Stars++;
-      case 2: pointer->Num2Stars++;
-      case 3: pointer->Num3Stars++;
-      case 4: pointer->Num4Stars++;
-      case 5: pointer->Num5Stars++;
-    }
+    if (reviewStars == 1)
+      pointer->Num1Stars++;
+    else if (reviewStars == 2)
+      pointer->Num2Stars++;
+    else if (reviewStars == 3)
+      pointer->Num3Stars++;
+    else if (reviewStars == 4)
+      pointer->Num4Stars++;
+    else if (reviewStars == 5)
+      pointer->Num5Stars++;
 
     // search movies-by-Name BST for inserting review
     pointer = byName.search(movieName);
 
-    switch(reviewStars)
-    {
-      case 1: pointer->Num1Stars++;
-      case 2: pointer->Num2Stars++;
-      case 3: pointer->Num3Stars++;
-      case 4: pointer->Num4Stars++;
-      case 5: pointer->Num5Stars++;
-    }
+    if (reviewStars == 1)
+      pointer->Num1Stars++;
+    else if (reviewStars == 2)
+      pointer->Num2Stars++;
+    else if (reviewStars == 3)
+      pointer->Num3Stars++;
+    else if (reviewStars == 4)
+      pointer->Num4Stars++;
+    else if (reviewStars == 5)
+      pointer->Num5Stars++;
 
+    // we just added a review, so increment reviewCount
+    // (also known as TotalReviews in main)
+    reviewCount++;
     reviewsFile >> reviewNumber;  // get next ID, or set EOF flag if no more data:
   }
 }
@@ -171,14 +180,84 @@ int main()
   getline(cin, junk);  // discard EOL following last input:
 
   InputMovies(moviesFilename, bstMoviesByID, bstMoviesByName);
-  InputReviews(reviewsFilename, bstMoviesByID, bstMoviesByName);
+  // declare count for total number of reviews in file
+  // to be incremented in InputReviews
+  int TotalReviews = 0;
+  InputReviews(reviewsFilename, bstMoviesByID, bstMoviesByName, TotalReviews);
 
   // output number of entries for each file
   cout << "Num movies: " << bstMoviesByID.size() << endl;
-  cout << "Num reviews: " << bstMoviesByID.size() << endl << endl;
-  
+  cout << "Num reviews: " << TotalReviews << endl << endl;
+  // output stats for BSTs
   cout << "Tree by movie id: size=" << bstMoviesByID.size() << ", height=" << bstMoviesByID.height() << endl;
-  cout << "Tree by movie name: size=" << bstMoviesByName.size() << ", height=" << bstMoviesByName.height() << endl;
+  cout << "Tree by movie name: size=" << bstMoviesByName.size() << ", height=" << bstMoviesByName.height() << endl << endl;
+
+  
+  // prompt ID or name search, single character # ends while loop and program
+  
+  string input;
+  // flag to set whether to search by name(true) or by ID(false)
+  bool lookupName = false;
+  while (input != "#") // redundant input check for # quit character
+  {
+    cout << "Enter a movie id or name (or # to quit)> ";
+    getline(cin, input); // read entire input line
+    // reset lookupName
+    lookupName = false;
+    // check for # quit character
+    if (input == "#")
+    {
+      break;
+    }
+    // check input to see if it has any letters in it, search by name if so
+    for (int i = 0; i < input.length(); ++i)
+    {
+      if (isalpha(input[i]))
+      {
+        lookupName = true;
+      }
+    }
+    
+    // create pointer to struct inside node holding info of search result movie
+    MovieData* result = nullptr;
+    // search by ID
+    if (!lookupName)
+    {
+      result = bstMoviesByID.search(stoi(input));
+    }
+    else // search by Name
+    {
+      result = bstMoviesByName.search(input);
+    }
+
+    // movie not found if pointer still points to null
+    if (result == nullptr)
+    {
+      cout << "not found..." << endl << endl;
+    }
+    // print movie info if found
+    else
+    {
+      // calculate average rating from info for the movie to be displayed
+      double avgRating = 0.0;
+      int starSum = result->Num5Stars + result->Num4Stars + result->Num3Stars + result->Num2Stars + result->Num1Stars;
+      int reviewSum =  (5 * result->Num5Stars) + (4 * result->Num4Stars) + (3 * result->Num3Stars) + (2 * result->Num2Stars) + (1 * result->Num1Stars);
+      if (starSum != 0)
+      {
+        avgRating = static_cast<double>(reviewSum) / starSum;
+      }
+
+      cout << "Movie ID: " << result->IDOfMovie << endl;
+      cout << "Movie Name: " << result->NameOfMovie << endl;
+      cout << "Avg rating: " << avgRating << endl;
+      cout << "5 stars: " << result->Num5Stars << endl;
+      cout << "4 stars: " << result->Num4Stars << endl;
+      cout << "3 stars: " << result->Num3Stars << endl;
+      cout << "2 stars: " << result->Num2Stars << endl;
+      cout << "1 star: " << result->Num1Stars << endl << endl;
+    }
+
+  }
 
   // done:
   return 0;
